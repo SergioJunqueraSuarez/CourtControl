@@ -66,7 +66,7 @@ class PerfilUsuario : AppCompatActivity() {
             }
         }
 
-        // 🔥 Guardar nueva contraseña
+        // Guardar nueva contraseña
         btnGuardar.setOnClickListener {
 
             val nuevaPass = etPassword.text.toString().trim()

@@ -75,7 +75,7 @@ class JugadoresTorneo : AppCompatActivity() {
 
                 if (ok) {
                     Toast.makeText(this, "Inscrito como $tipo", Toast.LENGTH_SHORT).show()
-                    cargarJugadores() // ✅ mejor que recreate()
+                    cargarJugadores() //
                 } else {
                     Toast.makeText(this, "Error al inscribirse", Toast.LENGTH_SHORT).show()
                 }

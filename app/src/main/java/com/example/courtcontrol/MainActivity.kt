@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
 
         val db = DBHelper(this)
 
-        // Ir a crear cuenta
+
         tvCrearCuenta.setOnClickListener {
             startActivity(Intent(this, Crear_cuenta::class.java))
         }
