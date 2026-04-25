@@ -4,7 +4,10 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.ImageView
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -18,6 +21,33 @@ class VistaPrincipal : AppCompatActivity() {
     private lateinit var torneosAdapter: TorneosAdapter
     private var esAdmin: Boolean = false
     private lateinit var btnAdminUsuarios: FloatingActionButton
+    private lateinit var spinnerEstado: Spinner
+    private lateinit var spinnerMes: Spinner
+    private var todosLosTorneosVisibles: List<Torneo> = emptyList()
+
+    private val estadosFiltro = listOf(
+        "Todos los estados",
+        DBHelper.ESTADO_ABIERTO,
+        DBHelper.ESTADO_CERRADO,
+        DBHelper.ESTADO_EN_JUEGO,
+        DBHelper.ESTADO_FINALIZADO
+    )
+
+    private val mesesFiltro = listOf(
+        "Todos los meses",
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre"
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +65,51 @@ class VistaPrincipal : AppCompatActivity() {
         esAdmin = db.obtenerRolPorId(usuarioId) == "admin"
 
         btnAdminUsuarios = findViewById(R.id.btnAdminUsuarios)
+        spinnerEstado = findViewById(R.id.spinnerEstado)
+        spinnerMes = findViewById(R.id.spinnerMes)
+
+        configurarFiltros()
+        configurarBotonAdmin()
+        configurarPerfil()
+        configurarListaTorneos()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        if (::torneosAdapter.isInitialized) {
+            esAdmin = db.obtenerRolPorId(usuarioId) == "admin"
+            btnAdminUsuarios.visibility = if (esAdmin) View.VISIBLE else View.GONE
+            btnAdminUsuarios.isEnabled = esAdmin
+            recargarTorneos()
+        }
+    }
+
+    private fun configurarFiltros() {
+        spinnerEstado.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item,
+            estadosFiltro
+        )
+        spinnerMes.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_dropdown_item,
+            mesesFiltro
+        )
+
+        val listener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                aplicarFiltros()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+        }
+
+        spinnerEstado.onItemSelectedListener = listener
+        spinnerMes.onItemSelectedListener = listener
+    }
+
+    private fun configurarBotonAdmin() {
         btnAdminUsuarios.visibility = if (esAdmin) View.VISIBLE else View.GONE
         btnAdminUsuarios.isEnabled = esAdmin
         btnAdminUsuarios.setOnClickListener {
@@ -48,18 +123,22 @@ class VistaPrincipal : AppCompatActivity() {
                 }
             )
         }
+    }
 
+    private fun configurarPerfil() {
         val ivPerfil = findViewById<ImageView>(R.id.ivPerfil)
         ivPerfil.setOnClickListener {
             val intent = Intent(this, PerfilUsuario::class.java)
             intent.putExtra("usuario_id", usuarioId)
             startActivity(intent)
         }
+    }
 
+    private fun configurarListaTorneos() {
         val rvTorneos = findViewById<RecyclerView>(R.id.rvTorneos)
         rvTorneos.layoutManager = LinearLayoutManager(this)
         torneosAdapter = TorneosAdapter(
-            torneos = db.obtenerTorneosVisibles(usuarioId),
+            torneos = emptyList(),
             db = db,
             esAdmin = esAdmin,
             onTorneoClick = { torneo ->
@@ -83,16 +162,41 @@ class VistaPrincipal : AppCompatActivity() {
             }
         )
         rvTorneos.adapter = torneosAdapter
+        recargarTorneos()
     }
 
-    override fun onResume() {
-        super.onResume()
+    private fun recargarTorneos() {
+        todosLosTorneosVisibles = db.obtenerTorneosVisibles(usuarioId)
+        aplicarFiltros()
+    }
 
-        if (::torneosAdapter.isInitialized) {
-            esAdmin = db.obtenerRolPorId(usuarioId) == "admin"
-            btnAdminUsuarios.visibility = if (esAdmin) View.VISIBLE else View.GONE
-            btnAdminUsuarios.isEnabled = esAdmin
-            torneosAdapter.actualizarLista(db.obtenerTorneosVisibles(usuarioId))
+    private fun aplicarFiltros() {
+        if (!::torneosAdapter.isInitialized) {
+            return
+        }
+
+        val estadoSeleccionado = spinnerEstado.selectedItem?.toString().orEmpty()
+        val mesSeleccionado = spinnerMes.selectedItemPosition
+
+        val filtrados = todosLosTorneosVisibles.filter { torneo ->
+            val coincideEstado =
+                estadoSeleccionado == estadosFiltro.first() || torneo.estado == estadoSeleccionado
+            val coincideMes =
+                mesSeleccionado == 0 || obtenerMesDeFecha(torneo.fecha) == mesSeleccionado
+
+            coincideEstado && coincideMes
+        }
+
+        torneosAdapter.actualizarLista(filtrados)
+    }
+
+    private fun obtenerMesDeFecha(fecha: String): Int? {
+        val valor = fecha.trim()
+
+        return when {
+            valor.length >= 7 && valor[4] == '-' -> valor.substring(5, 7).toIntOrNull()
+            valor.length >= 5 && valor[2] == '/' -> valor.substring(3, 5).toIntOrNull()
+            else -> null
         }
     }
 
@@ -132,7 +236,7 @@ class VistaPrincipal : AppCompatActivity() {
                 val ok = db.borrarTorneo(torneo.id)
                 if (ok) {
                     Toast.makeText(this, "Torneo borrado", Toast.LENGTH_SHORT).show()
-                    torneosAdapter.actualizarLista(db.obtenerTorneosVisibles(usuarioId))
+                    recargarTorneos()
                 } else {
                     Toast.makeText(this, "No se pudo borrar el torneo", Toast.LENGTH_SHORT).show()
                 }
