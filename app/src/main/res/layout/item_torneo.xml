@@ -49,6 +49,15 @@
             android:layout_marginTop="6dp"
             android:textColor="@android:color/holo_blue_dark"/>
 
+        <TextView
+            android:id="@+id/tvCapitanes"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Capitanes: 0/4 - faltan 4"
+            android:textSize="14sp"
+            android:layout_marginTop="4dp"
+            android:textColor="@android:color/holo_orange_dark"/>
+
     </LinearLayout>
 
 </androidx.cardview.widget.CardView>

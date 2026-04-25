@@ -1,6 +1,5 @@
 package com.example.courtcontrol
 
-import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,11 +8,11 @@ import androidx.recyclerview.widget.RecyclerView
 
 class TorneosAdapter(
     private var torneos: List<Torneo>,
-    private val usuarioId: Int,
-    private val db: DBHelper
+    private val db: DBHelper,
+    private val esAdmin: Boolean,
+    private val onTorneoClick: (Torneo) -> Unit,
+    private val onTorneoLongClick: (Torneo) -> Unit
 ) : RecyclerView.Adapter<TorneosAdapter.TorneoViewHolder>() {
-
-    private val maxJugadores = 20
 
     inner class TorneoViewHolder(itemView: View) :
         RecyclerView.ViewHolder(itemView) {
@@ -22,6 +21,7 @@ class TorneosAdapter(
         val tvFechaLugar = itemView.findViewById<TextView>(R.id.tvFechaLugar)
         val tvEstado = itemView.findViewById<TextView>(R.id.tvEstado)
         val tvJugadores = itemView.findViewById<TextView>(R.id.tvJugadores)
+        val tvCapitanes = itemView.findViewById<TextView>(R.id.tvCapitanes)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TorneoViewHolder {
@@ -31,7 +31,6 @@ class TorneosAdapter(
     }
 
     override fun onBindViewHolder(holder: TorneoViewHolder, position: Int) {
-
         val torneo = torneos[position]
 
         holder.tvNombre.text = torneo.nombre
@@ -39,23 +38,35 @@ class TorneosAdapter(
         holder.tvEstado.text = torneo.estado
 
         val numJugadores = db.contarInscritosPorTorneo(torneo.id)
+        val numCapitanes = db.contarCapitanes(torneo.id)
+        val capitanesRestantes = db.capitanesRestantes(torneo.id)
 
-        holder.tvJugadores.text = "$numJugadores/$maxJugadores jugadores"
+        holder.tvJugadores.text = "$numJugadores/${DBHelper.MAX_JUGADORES_POR_TORNEO} jugadores"
+        holder.tvCapitanes.text = "Capitanes: $numCapitanes/${DBHelper.MAX_EQUIPOS_POR_TORNEO} - faltan $capitanesRestantes"
 
-        if (numJugadores >= maxJugadores) {
+        if (numJugadores >= DBHelper.MAX_JUGADORES_POR_TORNEO) {
             holder.tvJugadores.setTextColor(android.graphics.Color.RED)
         } else {
             holder.tvJugadores.setTextColor(android.graphics.Color.parseColor("#1976D2"))
         }
 
+        if (capitanesRestantes == 0) {
+            holder.tvCapitanes.setTextColor(android.graphics.Color.parseColor("#2E7D32"))
+        } else {
+            holder.tvCapitanes.setTextColor(android.graphics.Color.parseColor("#F57C00"))
+        }
+
         holder.itemView.setOnClickListener {
-            val context = holder.itemView.context
-            val intent = Intent(context, JugadoresTorneo::class.java)
+            onTorneoClick(torneo)
+        }
 
-            intent.putExtra("id_torneo", torneo.id)
-            intent.putExtra("usuario_id", usuarioId)
-
-            context.startActivity(intent)
+        holder.itemView.setOnLongClickListener {
+            if (esAdmin) {
+                onTorneoLongClick(torneo)
+                true
+            } else {
+                false
+            }
         }
     }
 

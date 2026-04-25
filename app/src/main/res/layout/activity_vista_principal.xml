@@ -44,12 +44,12 @@
         android:padding="8dp"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/btnAdmin"
+        android:id="@+id/btnAdminUsuarios"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        android:contentDescription="Crear torneo"
-        android:src="@android:drawable/ic_input_add"
+        android:contentDescription="Gestionar administradores"
+        android:src="@android:drawable/ic_menu_manage"
         android:tint="#FFFFFF"
         app:backgroundTint="#FF6200EE"
         app:layout_constraintBottom_toBottomOf="parent"

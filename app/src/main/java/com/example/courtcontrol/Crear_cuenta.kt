@@ -26,7 +26,7 @@ class Crear_cuenta : AppCompatActivity() {
             val password = etPassword.text.toString().trim()
             val repetir = etRepetir.text.toString().trim()
 
-             VALIDACIONES
+            // Validaciones
             if (usuario.isEmpty() || password.isEmpty() || repetir.isEmpty()) {
                 Toast.makeText(this, "Rellena todos los campos", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
