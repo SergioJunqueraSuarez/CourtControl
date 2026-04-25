@@ -21,41 +21,34 @@ class Crear_cuenta : AppCompatActivity() {
         val db = DBHelper(this)
 
         btnCrear.setOnClickListener {
-
             val usuario = etUsuario.text.toString().trim()
             val password = etPassword.text.toString().trim()
             val repetir = etRepetir.text.toString().trim()
 
-            // Validaciones
             if (usuario.isEmpty() || password.isEmpty() || repetir.isEmpty()) {
                 Toast.makeText(this, "Rellena todos los campos", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             if (password != repetir) {
-                Toast.makeText(this, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Las contrasenas no coinciden", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // 🔥 comprobar si existe (usando usuario como email o nombre según tu diseño)
             if (db.usuarioExiste(usuario)) {
                 Toast.makeText(this, "El usuario ya existe", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            // 🔥 INSERTAR EN BD
             val ok = db.insertarUsuario(
                 usuario = usuario,
-                contraseña = password,
+                password = password,
                 rol = "usuario"
             )
 
             if (ok) {
                 Toast.makeText(this, "Cuenta creada correctamente", Toast.LENGTH_SHORT).show()
-
-                // 🔥 volver al login
-                val intent = Intent(this, MainActivity::class.java)
-                startActivity(intent)
+                startActivity(Intent(this, MainActivity::class.java))
                 finish()
             } else {
                 Toast.makeText(this, "Error al crear la cuenta", Toast.LENGTH_SHORT).show()
