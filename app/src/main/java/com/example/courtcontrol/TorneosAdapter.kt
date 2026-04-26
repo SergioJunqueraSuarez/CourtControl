@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 
 class TorneosAdapter(
@@ -32,6 +33,7 @@ class TorneosAdapter(
 
     override fun onBindViewHolder(holder: TorneoViewHolder, position: Int) {
         val torneo = torneos[position]
+        val context = holder.itemView.context
 
         holder.tvNombre.text = torneo.nombre
         holder.tvFechaLugar.text = "${torneo.fecha} - ${torneo.lugar}"
@@ -45,15 +47,15 @@ class TorneosAdapter(
         holder.tvCapitanes.text = "Capitanes: $numCapitanes/${DBHelper.MAX_EQUIPOS_POR_TORNEO} - faltan $capitanesRestantes"
 
         if (numJugadores >= DBHelper.MAX_JUGADORES_POR_TORNEO) {
-            holder.tvJugadores.setTextColor(android.graphics.Color.RED)
+            holder.tvJugadores.setTextColor(ContextCompat.getColor(context, R.color.cc_danger))
         } else {
-            holder.tvJugadores.setTextColor(android.graphics.Color.parseColor("#1976D2"))
+            holder.tvJugadores.setTextColor(ContextCompat.getColor(context, R.color.cc_info))
         }
 
         if (capitanesRestantes == 0) {
-            holder.tvCapitanes.setTextColor(android.graphics.Color.parseColor("#2E7D32"))
+            holder.tvCapitanes.setTextColor(ContextCompat.getColor(context, R.color.cc_success_text))
         } else {
-            holder.tvCapitanes.setTextColor(android.graphics.Color.parseColor("#F57C00"))
+            holder.tvCapitanes.setTextColor(ContextCompat.getColor(context, R.color.cc_warning))
         }
 
         holder.itemView.setOnClickListener {

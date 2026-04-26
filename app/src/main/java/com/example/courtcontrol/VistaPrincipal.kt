@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.Spinner
 import android.widget.Toast
@@ -21,6 +22,7 @@ class VistaPrincipal : AppCompatActivity() {
     private lateinit var torneosAdapter: TorneosAdapter
     private var esAdmin: Boolean = false
     private lateinit var btnAdminUsuarios: FloatingActionButton
+    private lateinit var btnCrearTorneoAdmin: Button
     private lateinit var spinnerEstado: Spinner
     private lateinit var spinnerMes: Spinner
     private var todosLosTorneosVisibles: List<Torneo> = emptyList()
@@ -65,6 +67,7 @@ class VistaPrincipal : AppCompatActivity() {
         esAdmin = db.obtenerRolPorId(usuarioId) == "admin"
 
         btnAdminUsuarios = findViewById(R.id.btnAdminUsuarios)
+        btnCrearTorneoAdmin = findViewById(R.id.btnCrearTorneoAdmin)
         spinnerEstado = findViewById(R.id.spinnerEstado)
         spinnerMes = findViewById(R.id.spinnerMes)
 
@@ -81,6 +84,8 @@ class VistaPrincipal : AppCompatActivity() {
             esAdmin = db.obtenerRolPorId(usuarioId) == "admin"
             btnAdminUsuarios.visibility = if (esAdmin) View.VISIBLE else View.GONE
             btnAdminUsuarios.isEnabled = esAdmin
+            btnCrearTorneoAdmin.visibility = if (esAdmin) View.VISIBLE else View.GONE
+            btnCrearTorneoAdmin.isEnabled = esAdmin
             recargarTorneos()
         }
     }
@@ -112,6 +117,8 @@ class VistaPrincipal : AppCompatActivity() {
     private fun configurarBotonAdmin() {
         btnAdminUsuarios.visibility = if (esAdmin) View.VISIBLE else View.GONE
         btnAdminUsuarios.isEnabled = esAdmin
+        btnCrearTorneoAdmin.visibility = if (esAdmin) View.VISIBLE else View.GONE
+        btnCrearTorneoAdmin.isEnabled = esAdmin
         btnAdminUsuarios.setOnClickListener {
             if (!esAdmin) {
                 return@setOnClickListener
@@ -119,6 +126,17 @@ class VistaPrincipal : AppCompatActivity() {
 
             startActivity(
                 Intent(this, GestionUsuariosActivity::class.java).apply {
+                    putExtra("usuario_id", usuarioId)
+                }
+            )
+        }
+        btnCrearTorneoAdmin.setOnClickListener {
+            if (!esAdmin) {
+                return@setOnClickListener
+            }
+
+            startActivity(
+                Intent(this, CrearTorneo::class.java).apply {
                     putExtra("usuario_id", usuarioId)
                 }
             )
@@ -192,12 +210,12 @@ class VistaPrincipal : AppCompatActivity() {
 
     private fun obtenerMesDeFecha(fecha: String): Int? {
         val valor = fecha.trim()
-
-        return when {
+        val mes = when {
             valor.length >= 7 && valor[4] == '-' -> valor.substring(5, 7).toIntOrNull()
             valor.length >= 5 && valor[2] == '/' -> valor.substring(3, 5).toIntOrNull()
             else -> null
         }
+        return mes?.takeIf { it in 1..12 }
     }
 
     private fun mostrarMenuAdminTorneo(torneo: Torneo) {

@@ -21,41 +21,38 @@ class MainActivity : AppCompatActivity() {
 
         val db = DBHelper(this)
 
-
         tvCrearCuenta.setOnClickListener {
             startActivity(Intent(this, Crear_cuenta::class.java))
         }
 
-        // LOGIN
         btnLogin.setOnClickListener {
-
             val usuarioTxt = etUsuario.text.toString().trim()
-            val contraseña = etPassword.text.toString().trim()
+            val password = etPassword.text.toString().trim()
 
-            if (usuarioTxt.isEmpty() || contraseña.isEmpty()) {
+            if (usuarioTxt.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Rellena todos los campos", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val valido = db.validarLogin(usuarioTxt, contraseña)
+            runCatching {
+                val valido = db.validarLogin(usuarioTxt, password)
 
-            if (valido) {
-
-                val usuario = db.obtenerUsuario(usuarioTxt)
-
-                if (usuario != null) {
-                    Toast.makeText(this, "Bienvenido ${usuario.usuario}", Toast.LENGTH_SHORT).show()
-
-                    val intent = Intent(this, VistaPrincipal::class.java)
-                    intent.putExtra("usuario_id", usuario.id_usuario)
-                    startActivity(intent)
-                    finish()
+                if (valido) {
+                    val usuario = db.obtenerUsuario(usuarioTxt)
+                    if (usuario != null) {
+                        Toast.makeText(this, "Bienvenido ${usuario.usuario}", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this, VistaPrincipal::class.java)
+                        intent.putExtra("usuario_id", usuario.id_usuario)
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        Toast.makeText(this, "Error al obtener usuario", Toast.LENGTH_SHORT).show()
+                    }
                 } else {
-                    Toast.makeText(this, "Error al obtener usuario", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Usuario o contrasena incorrectos", Toast.LENGTH_SHORT).show()
                 }
-
-            } else {
-                Toast.makeText(this, "Usuario o contraseña incorrectos", Toast.LENGTH_SHORT).show()
+            }.onFailure {
+                Toast.makeText(this, "Se produjo un error al iniciar sesion", Toast.LENGTH_SHORT).show()
             }
         }
     }

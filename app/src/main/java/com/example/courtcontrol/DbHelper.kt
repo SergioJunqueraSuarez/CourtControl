@@ -10,8 +10,10 @@ class DBHelper(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "CourtControlDB"
-        private const val DATABASE_VERSION = 4
-        private const val PASSWORD_COLUMN = "contraseÃ±a"
+        private const val DATABASE_VERSION = 6
+        private const val PASSWORD_COLUMN = "password"
+        private const val LEGACY_PASSWORD_COLUMN_1 = "contrase\u00f1a"
+        private const val LEGACY_PASSWORD_COLUMN_2 = "contrase\u00c3\u00b1a"
 
         const val MAX_EQUIPOS_POR_TORNEO = 4
         const val MAX_JUGADORES_POR_TORNEO = 20
@@ -95,6 +97,7 @@ class DBHelper(context: Context) :
         crearTablaEquipoMiembros(db)
         crearTablaDraftOrden(db)
         insertarTorneosIniciales(db)
+        insertarDatosPrueba(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
@@ -106,6 +109,18 @@ class DBHelper(context: Context) :
             intentarExecSQL(db, "ALTER TABLE Partidos ADD COLUMN ronda INTEGER NOT NULL DEFAULT 1")
             intentarExecSQL(db, "ALTER TABLE Partidos ADD COLUMN orden INTEGER NOT NULL DEFAULT 1")
         }
+        if (oldVersion < 5) {
+            insertarDatosPrueba(db)
+        }
+        if (oldVersion < 6) {
+            asegurarColumnaPassword(db)
+        }
+    }
+
+    override fun onOpen(db: SQLiteDatabase) {
+        super.onOpen(db)
+        asegurarColumnaPassword(db)
+        insertarDatosPrueba(db)
     }
 
     private fun intentarExecSQL(db: SQLiteDatabase?, sql: String) {
@@ -144,6 +159,42 @@ class DBHelper(context: Context) :
         )
     }
 
+    private fun asegurarColumnaPassword(db: SQLiteDatabase?) {
+        if (db == null) {
+            return
+        }
+
+        val columnas = mutableSetOf<String>()
+        val cursor = db.rawQuery("PRAGMA table_info(Usuarios)", null)
+        if (cursor.moveToFirst()) {
+            do {
+                columnas.add(cursor.getString(1))
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+
+        if (!columnas.contains(PASSWORD_COLUMN)) {
+            intentarExecSQL(db, "ALTER TABLE Usuarios ADD COLUMN $PASSWORD_COLUMN TEXT")
+        }
+
+        if (columnas.contains(LEGACY_PASSWORD_COLUMN_1)) {
+            intentarExecSQL(
+                db,
+                "UPDATE Usuarios SET $PASSWORD_COLUMN = $LEGACY_PASSWORD_COLUMN_1 WHERE $PASSWORD_COLUMN IS NULL"
+            )
+        } else if (columnas.contains(LEGACY_PASSWORD_COLUMN_2)) {
+            intentarExecSQL(
+                db,
+                "UPDATE Usuarios SET $PASSWORD_COLUMN = $LEGACY_PASSWORD_COLUMN_2 WHERE $PASSWORD_COLUMN IS NULL"
+            )
+        } else {
+            intentarExecSQL(
+                db,
+                "UPDATE Usuarios SET $PASSWORD_COLUMN = '1234' WHERE $PASSWORD_COLUMN IS NULL"
+            )
+        }
+    }
+
     private fun insertarTorneosIniciales(db: SQLiteDatabase?) {
         val cursor = db?.rawQuery("SELECT COUNT(*) FROM Torneos", null)
         cursor?.moveToFirst()
@@ -169,6 +220,98 @@ class DBHelper(context: Context) :
                 VALUES ('Torneo Primavera', '2026-03-20', 'Valencia', '$ESTADO_ABIERTO')
                 """.trimIndent()
             )
+        }
+    }
+
+    // pruebas
+    private fun insertarDatosPrueba(db: SQLiteDatabase?) {
+        if (db == null) {
+            return
+        }
+
+        val cursorUsuarios = db.rawQuery("SELECT COUNT(*) FROM Usuarios", null)
+        cursorUsuarios.moveToFirst()
+        val totalUsuarios = cursorUsuarios.getInt(0)
+        cursorUsuarios.close()
+
+        if (totalUsuarios < 51) {
+            for (i in 1..50) {
+                db.execSQL(
+                    """
+                    INSERT OR IGNORE INTO Usuarios (usuario, $PASSWORD_COLUMN, rol)
+                    VALUES (?, ?, 'usuario')
+                    """.trimIndent(),
+                    arrayOf("usuario$i", "1234")
+                )
+            }
+        }
+
+        val cursorInscripciones = db.rawQuery("SELECT COUNT(*) FROM Inscripciones", null)
+        cursorInscripciones.moveToFirst()
+        val totalInscripciones = cursorInscripciones.getInt(0)
+        cursorInscripciones.close()
+
+        if (totalInscripciones > 0) {
+            return
+        }
+
+        val torneos = mutableListOf<Int>()
+        val torneosCursor = db.rawQuery("SELECT id FROM Torneos ORDER BY id ASC", null)
+        if (torneosCursor.moveToFirst()) {
+            do {
+                torneos.add(torneosCursor.getInt(0))
+            } while (torneosCursor.moveToNext())
+        }
+        torneosCursor.close()
+
+        if (torneos.isEmpty()) {
+            return
+        }
+
+        val usuarios = mutableListOf<Int>()
+        val usuariosCursor = db.rawQuery(
+            "SELECT id_usuario FROM Usuarios WHERE usuario != 'admin' ORDER BY id_usuario ASC",
+            null
+        )
+        if (usuariosCursor.moveToFirst()) {
+            do {
+                usuarios.add(usuariosCursor.getInt(0))
+            } while (usuariosCursor.moveToNext())
+        }
+        usuariosCursor.close()
+
+        val cuposPorTorneo = listOf(20, 20, 10)
+        var indiceUsuario = 0
+
+        torneos.forEachIndexed { index, idTorneo ->
+            val cupo = cuposPorTorneo.getOrElse(index) { 8 }
+            val totalParaTorneo = minOf(cupo, usuarios.size - indiceUsuario)
+            if (totalParaTorneo <= 0) {
+                return@forEachIndexed
+            }
+
+            for (offset in 0 until totalParaTorneo) {
+                val idUsuario = usuarios[indiceUsuario + offset]
+                val rolTorneo = if (offset < MAX_EQUIPOS_POR_TORNEO) "CAPITAN" else "JUGADOR"
+                db.execSQL(
+                    """
+                    INSERT OR IGNORE INTO Inscripciones (id_usuario, id_torneo, rol_torneo)
+                    VALUES (?, ?, ?)
+                    """.trimIndent(),
+                    arrayOf(idUsuario, idTorneo, rolTorneo)
+                )
+            }
+
+            val estado = when {
+                totalParaTorneo >= MAX_JUGADORES_POR_TORNEO -> ESTADO_CERRADO
+                else -> ESTADO_ABIERTO
+            }
+            db.execSQL(
+                "UPDATE Torneos SET estado = ? WHERE id = ?",
+                arrayOf(estado, idTorneo)
+            )
+
+            indiceUsuario += totalParaTorneo
         }
     }
 
@@ -808,7 +951,7 @@ class DBHelper(context: Context) :
         db.beginTransaction()
         return try {
             val infoCursor = db.rawQuery(
-                "SELECT id_torneo, ronda, equipo1, equipo2 FROM Partidos WHERE id_partido = ?",
+                "SELECT id_torneo, ronda, equipo1, equipo2, ganador FROM Partidos WHERE id_partido = ?",
                 arrayOf(idPartido.toString())
             )
             if (!infoCursor.moveToFirst()) {
@@ -819,7 +962,12 @@ class DBHelper(context: Context) :
             val ronda = infoCursor.getInt(1)
             val equipo1 = infoCursor.getInt(2)
             val equipo2 = infoCursor.getInt(3)
+            val yaTieneGanador = !infoCursor.isNull(4)
             infoCursor.close()
+
+            if (yaTieneGanador) {
+                return false
+            }
 
             if (idGanador != equipo1 && idGanador != equipo2) {
                 return false
@@ -827,9 +975,17 @@ class DBHelper(context: Context) :
 
             val updateValues = ContentValues().apply {
                 put("ganador", idGanador)
-                put("resultado", obtenerNombreEquipo(idGanador))
+                put("resultado", obtenerNombreEquipo(db, idGanador))
             }
-            db.update("Partidos", updateValues, "id_partido = ?", arrayOf(idPartido.toString()))
+            val filasActualizadas = db.update(
+                "Partidos",
+                updateValues,
+                "id_partido = ?",
+                arrayOf(idPartido.toString())
+            )
+            if (filasActualizadas <= 0) {
+                return false
+            }
 
             if (ronda == 1) {
                 val semiCursor = db.rawQuery(
@@ -900,15 +1056,13 @@ class DBHelper(context: Context) :
         return ids
     }
 
-    private fun obtenerNombreEquipo(idEquipo: Int): String {
-        val db = readableDatabase
+    private fun obtenerNombreEquipo(db: SQLiteDatabase, idEquipo: Int): String {
         val cursor = db.rawQuery(
             "SELECT nombre FROM Equipos WHERE id_equipo = ?",
             arrayOf(idEquipo.toString())
         )
         val nombre = if (cursor.moveToFirst()) cursor.getString(0) else ""
         cursor.close()
-        db.close()
         return nombre
     }
 
@@ -935,3 +1089,5 @@ class DBHelper(context: Context) :
         return usuarios
     }
 }
+
+

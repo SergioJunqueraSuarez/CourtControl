@@ -1,12 +1,18 @@
 package com.example.courtcontrol
 
-import android.database.Cursor
 import android.os.Bundle
-import android.text.InputType
-import android.widget.*
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class PerfilUsuario : AppCompatActivity() {
+
+    companion object {
+        private const val PASSWORD_OCULTO = "Contrasena: ******"
+        private const val PASSWORD_PREFIJO = "Contrasena: "
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -14,61 +20,45 @@ class PerfilUsuario : AppCompatActivity() {
 
         val tvNombre = findViewById<TextView>(R.id.tvNombreUsuario)
         val tvPassword = findViewById<TextView>(R.id.tvPasswordUsuario)
-
         val btnToggle = findViewById<Button>(R.id.btnTogglePassword)
-
         val etPassword = findViewById<EditText>(R.id.etPasswordNueva)
         val etConfirmar = findViewById<EditText>(R.id.etPasswordConfirmar)
-
         val btnGuardar = findViewById<Button>(R.id.btnGuardarPassword)
 
         val usuarioId = intent.getIntExtra("usuario_id", -1)
-
         if (usuarioId == -1) {
-            Toast.makeText(this, "Usuario no válido", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Usuario no valido", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
 
         val db = DBHelper(this)
+        val usuario = runCatching { db.obtenerUsuarioPorId(usuarioId) }.getOrNull()
 
-        // 🔹 Cargar datos
-        val cursor: Cursor = db.readableDatabase.rawQuery(
-            "SELECT usuario, contraseña FROM Usuarios WHERE id_usuario = ?",
-            arrayOf(usuarioId.toString())
-        )
-
-        var passwordActual = ""
-
-        if (cursor.moveToFirst()) {
-            val nombre = cursor.getString(0)
-            passwordActual = cursor.getString(1)
-
-            tvNombre.text = nombre
-            tvPassword.text = "Contraseña: ******"
-        } else {
+        if (usuario == null) {
             Toast.makeText(this, "Usuario no encontrado", Toast.LENGTH_SHORT).show()
             finish()
+            return
         }
 
-        cursor.close()
+        tvNombre.text = usuario.usuario
+        tvPassword.text = PASSWORD_OCULTO
 
-        // 🔥 Mostrar / ocultar contraseña
+        var passwordActual = usuario.password
         var visible = false
+
         btnToggle.setOnClickListener {
             visible = !visible
             if (visible) {
-                tvPassword.text = "Contraseña: $passwordActual"
-                btnToggle.text = "Ocultar contraseña"
+                tvPassword.text = "$PASSWORD_PREFIJO$passwordActual"
+                btnToggle.text = "Ocultar contrasena"
             } else {
-                tvPassword.text = "Contraseña: ******"
-                btnToggle.text = "Mostrar contraseña"
+                tvPassword.text = PASSWORD_OCULTO
+                btnToggle.text = "Mostrar contrasena"
             }
         }
 
-        // Guardar nueva contraseña
         btnGuardar.setOnClickListener {
-
             val nuevaPass = etPassword.text.toString().trim()
             val confirmar = etConfirmar.text.toString().trim()
 
@@ -78,26 +68,23 @@ class PerfilUsuario : AppCompatActivity() {
             }
 
             if (nuevaPass != confirmar) {
-                Toast.makeText(this, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Las contrasenas no coinciden", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            db.writableDatabase.execSQL(
-                "UPDATE Usuarios SET contraseña = ? WHERE id_usuario = ?",
-                arrayOf(nuevaPass, usuarioId.toString())
-            )
+            val ok = runCatching { db.actualizarPassword(usuarioId, nuevaPass) }.getOrDefault(false)
+            if (!ok) {
+                Toast.makeText(this, "No se pudo actualizar la contrasena", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
 
-            Toast.makeText(this, "Contraseña actualizada", Toast.LENGTH_SHORT).show()
-
-            // limpiar campos
+            Toast.makeText(this, "Contrasena actualizada", Toast.LENGTH_SHORT).show()
             etPassword.setText("")
             etConfirmar.setText("")
-
-            // actualizar variable
             passwordActual = nuevaPass
-            tvPassword.text = "Contraseña: ******"
+            tvPassword.text = PASSWORD_OCULTO
             visible = false
-            btnToggle.text = "Mostrar contraseña"
+            btnToggle.text = "Mostrar contrasena"
         }
     }
 }

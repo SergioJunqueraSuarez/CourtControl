@@ -5,91 +5,85 @@
     android:id="@+id/layoutCrearTorneo"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="20dp"
-    android:background="#F5F5F5">
+    android:background="@color/cc_bg"
+    android:padding="20dp">
 
-    <!-- Título -->
     <TextView
         android:id="@+id/tvCrearTorneoTitulo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:text="Crear Torneo"
+        android:textColor="@color/cc_text_primary"
         android:textSize="26sp"
         android:textStyle="bold"
-        android:textColor="#222"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="20dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Nombre -->
     <EditText
         android:id="@+id/inputTorneoNombre"
         android:layout_width="0dp"
         android:layout_height="50dp"
-        android:hint="Nombre del torneo"
+        android:layout_marginTop="25dp"
         android:background="@android:drawable/edit_text"
+        android:hint="Nombre del torneo"
         android:padding="10dp"
-        app:layout_constraintTop_toBottomOf="@id/tvCrearTorneoTitulo"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="25dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvCrearTorneoTitulo" />
 
-    <!-- Fecha -->
     <EditText
         android:id="@+id/inputTorneoFecha"
         android:layout_width="0dp"
         android:layout_height="50dp"
-        android:hint="Fecha (yyyy-MM-dd)"
+        android:layout_marginTop="15dp"
         android:background="@android:drawable/edit_text"
-        android:focusable="false"
         android:clickable="true"
+        android:focusable="false"
+        android:hint="Fecha (yyyy-MM-dd)"
         android:inputType="none"
         android:padding="10dp"
-        app:layout_constraintTop_toBottomOf="@id/inputTorneoNombre"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="15dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/inputTorneoNombre" />
 
-    <!-- Lugar -->
     <EditText
         android:id="@+id/inputTorneoLugar"
         android:layout_width="0dp"
         android:layout_height="50dp"
-        android:hint="Lugar"
+        android:layout_marginTop="15dp"
         android:background="@android:drawable/edit_text"
+        android:hint="Lugar"
         android:padding="10dp"
-        app:layout_constraintTop_toBottomOf="@id/inputTorneoFecha"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="15dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/inputTorneoFecha" />
 
-    <!-- Estado -->
     <EditText
         android:id="@+id/inputTorneoEstado"
         android:layout_width="0dp"
         android:layout_height="50dp"
-        android:hint="Estado del torneo"
+        android:layout_marginTop="15dp"
         android:background="@android:drawable/edit_text"
         android:enabled="false"
         android:focusable="false"
+        android:hint="Estado del torneo"
         android:padding="10dp"
-        app:layout_constraintTop_toBottomOf="@id/inputTorneoLugar"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="15dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/inputTorneoLugar" />
 
-    <!-- Botón -->
     <Button
         android:id="@+id/btnCrearTorneo"
         android:layout_width="0dp"
         android:layout_height="55dp"
+        android:layout_marginTop="25dp"
+        android:backgroundTint="@color/cc_primary_dark"
         android:text="Crear Torneo"
-        android:backgroundTint="#6200EE"
-        android:textColor="#FFFFFF"
-        app:layout_constraintTop_toBottomOf="@id/inputTorneoEstado"
-        app:layout_constraintStart_toStartOf="parent"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
-        android:layout_marginTop="25dp"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/inputTorneoEstado" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

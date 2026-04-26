@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F5F5"
+    android:background="@color/cc_bg"
     android:fillViewport="true">
 
     <LinearLayout
@@ -15,9 +15,12 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:cardCornerRadius="18dp"
-            app:cardElevation="4dp"
-            xmlns:app="http://schemas.android.com/apk/res-auto">
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            app:cardBackgroundColor="@color/cc_surface"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp"
+            app:strokeColor="@color/cc_border"
+            app:strokeWidth="1dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -30,7 +33,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Participantes: 0/20 | Capitanes: 0/4"
-                    android:textColor="#111111"
+                    android:textColor="@color/cc_text_primary"
                     android:textSize="16sp"
                     android:textStyle="bold" />
 
@@ -40,7 +43,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:text="Estado: Abierto"
-                    android:textColor="#486581"
+                    android:textColor="@color/cc_text_secondary"
                     android:textSize="14sp" />
 
                 <Button
@@ -48,7 +51,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="14dp"
-                    android:text="Iniciar draft" />
+                    android:backgroundTint="@color/cc_primary_dark"
+                    android:text="Iniciar draft"
+                    android:textColor="@color/white" />
 
             </LinearLayout>
 
@@ -60,7 +65,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="Draft"
-            android:textColor="#222222"
+            android:textColor="@color/cc_text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
             android:visibility="gone" />
@@ -71,7 +76,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:text="Orden del draft pendiente"
-            android:textColor="#486581"
+            android:textColor="@color/cc_text_secondary"
             android:textSize="14sp"
             android:visibility="gone" />
 
@@ -81,7 +86,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:text="Turno actual"
-            android:textColor="#1F4E79"
+            android:textColor="@color/cc_primary"
             android:textSize="16sp"
             android:textStyle="bold"
             android:visibility="gone" />
@@ -100,7 +105,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="Equipos"
-            android:textColor="#222222"
+            android:textColor="@color/cc_text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
             android:visibility="gone" />
@@ -119,7 +124,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="Bracket"
-            android:textColor="#222222"
+            android:textColor="@color/cc_text_primary"
             android:textSize="20sp"
             android:textStyle="bold"
             android:visibility="gone" />
@@ -130,7 +135,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:text="Las semifinales aparecen primero y la final destaca al final del cuadro."
-            android:textColor="#6B7280"
+            android:textColor="@color/cc_text_secondary"
             android:textSize="14sp"
             android:visibility="gone" />
 
@@ -148,7 +153,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:text="Participantes"
-            android:textColor="#222222"
+            android:textColor="@color/cc_text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -164,7 +169,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="Inscribirse al torneo" />
+            android:backgroundTint="@color/cc_primary_dark"
+            android:text="Inscribirse al torneo"
+            android:textColor="@color/white" />
 
     </LinearLayout>
 

@@ -35,16 +35,18 @@ class Crear_cuenta : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            if (db.usuarioExiste(usuario)) {
+            if (runCatching { db.usuarioExiste(usuario) }.getOrDefault(false)) {
                 Toast.makeText(this, "El usuario ya existe", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
-            val ok = db.insertarUsuario(
+            val ok = runCatching {
+                db.insertarUsuario(
                 usuario = usuario,
                 password = password,
                 rol = "usuario"
-            )
+                )
+            }.getOrDefault(false)
 
             if (ok) {
                 Toast.makeText(this, "Cuenta creada correctamente", Toast.LENGTH_SHORT).show()
