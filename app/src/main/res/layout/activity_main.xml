@@ -27,6 +27,14 @@
             android:textColor="@color/white"
             android:textSize="28sp"
             android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="Torneos, draft y resultados en un solo sitio"
+            android:textColor="@color/cc_border"
+            android:textSize="14sp" />
     </LinearLayout>
 
     <com.google.android.material.card.MaterialCardView
@@ -95,7 +103,7 @@
                 android:layout_marginTop="16dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:text="Si no tienes una cuenta, crea una cuenta"
+                android:text="Crear cuenta nueva"
                 android:textColor="@color/cc_primary"
                 android:textStyle="bold" />
         </LinearLayout>

@@ -7,9 +7,12 @@ import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageView
 import android.widget.Spinner
 import android.widget.Toast
+import android.text.Editable
+import android.text.TextWatcher
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -23,6 +26,7 @@ class VistaPrincipal : AppCompatActivity() {
     private var esAdmin: Boolean = false
     private lateinit var btnAdminUsuarios: FloatingActionButton
     private lateinit var btnCrearTorneoAdmin: Button
+    private lateinit var inputBuscarTorneo: EditText
     private lateinit var spinnerEstado: Spinner
     private lateinit var spinnerMes: Spinner
     private var todosLosTorneosVisibles: List<Torneo> = emptyList()
@@ -68,6 +72,7 @@ class VistaPrincipal : AppCompatActivity() {
 
         btnAdminUsuarios = findViewById(R.id.btnAdminUsuarios)
         btnCrearTorneoAdmin = findViewById(R.id.btnCrearTorneoAdmin)
+        inputBuscarTorneo = findViewById(R.id.inputBuscarTorneo)
         spinnerEstado = findViewById(R.id.spinnerEstado)
         spinnerMes = findViewById(R.id.spinnerMes)
 
@@ -112,6 +117,14 @@ class VistaPrincipal : AppCompatActivity() {
 
         spinnerEstado.onItemSelectedListener = listener
         spinnerMes.onItemSelectedListener = listener
+
+        inputBuscarTorneo.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                aplicarFiltros()
+            }
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
     }
 
     private fun configurarBotonAdmin() {
@@ -195,14 +208,18 @@ class VistaPrincipal : AppCompatActivity() {
 
         val estadoSeleccionado = spinnerEstado.selectedItem?.toString().orEmpty()
         val mesSeleccionado = spinnerMes.selectedItemPosition
+        val busqueda = inputBuscarTorneo.text.toString().trim().lowercase()
 
         val filtrados = todosLosTorneosVisibles.filter { torneo ->
             val coincideEstado =
                 estadoSeleccionado == estadosFiltro.first() || torneo.estado == estadoSeleccionado
             val coincideMes =
                 mesSeleccionado == 0 || obtenerMesDeFecha(torneo.fecha) == mesSeleccionado
+            val coincideBusqueda = busqueda.isEmpty() ||
+                torneo.nombre.lowercase().contains(busqueda) ||
+                torneo.lugar.lowercase().contains(busqueda)
 
-            coincideEstado && coincideMes
+            coincideEstado && coincideMes && coincideBusqueda
         }
 
         torneosAdapter.actualizarLista(filtrados)

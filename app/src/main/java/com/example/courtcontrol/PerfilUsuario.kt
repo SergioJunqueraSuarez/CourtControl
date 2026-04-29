@@ -10,8 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 class PerfilUsuario : AppCompatActivity() {
 
     companion object {
-        private const val PASSWORD_OCULTO = "Contrasena: ******"
-        private const val PASSWORD_PREFIJO = "Contrasena: "
+        private const val PASSWORD_OCULTO = "Contrasena protegida"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,10 +19,10 @@ class PerfilUsuario : AppCompatActivity() {
 
         val tvNombre = findViewById<TextView>(R.id.tvNombreUsuario)
         val tvPassword = findViewById<TextView>(R.id.tvPasswordUsuario)
-        val btnToggle = findViewById<Button>(R.id.btnTogglePassword)
         val etPassword = findViewById<EditText>(R.id.etPasswordNueva)
         val etConfirmar = findViewById<EditText>(R.id.etPasswordConfirmar)
         val btnGuardar = findViewById<Button>(R.id.btnGuardarPassword)
+        val tvTorneosPerfil = findViewById<TextView>(R.id.tvTorneosPerfil)
 
         val usuarioId = intent.getIntExtra("usuario_id", -1)
         if (usuarioId == -1) {
@@ -43,20 +42,7 @@ class PerfilUsuario : AppCompatActivity() {
 
         tvNombre.text = usuario.usuario
         tvPassword.text = PASSWORD_OCULTO
-
-        var passwordActual = usuario.password
-        var visible = false
-
-        btnToggle.setOnClickListener {
-            visible = !visible
-            if (visible) {
-                tvPassword.text = "$PASSWORD_PREFIJO$passwordActual"
-                btnToggle.text = "Ocultar contrasena"
-            } else {
-                tvPassword.text = PASSWORD_OCULTO
-                btnToggle.text = "Mostrar contrasena"
-            }
-        }
+        tvTorneosPerfil.text = construirResumenTorneos(db.obtenerTorneosPerfil(usuarioId))
 
         btnGuardar.setOnClickListener {
             val nuevaPass = etPassword.text.toString().trim()
@@ -67,8 +53,13 @@ class PerfilUsuario : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            if (!FormValidator.passwordValida(nuevaPass)) {
+                etPassword.error = FormValidator.mensajePassword()
+                return@setOnClickListener
+            }
+
             if (nuevaPass != confirmar) {
-                Toast.makeText(this, "Las contrasenas no coinciden", Toast.LENGTH_SHORT).show()
+                etConfirmar.error = "Las contrasenas no coinciden"
                 return@setOnClickListener
             }
 
@@ -81,10 +72,17 @@ class PerfilUsuario : AppCompatActivity() {
             Toast.makeText(this, "Contrasena actualizada", Toast.LENGTH_SHORT).show()
             etPassword.setText("")
             etConfirmar.setText("")
-            passwordActual = nuevaPass
             tvPassword.text = PASSWORD_OCULTO
-            visible = false
-            btnToggle.text = "Mostrar contrasena"
+        }
+    }
+
+    private fun construirResumenTorneos(torneos: List<PerfilTorneo>): String {
+        if (torneos.isEmpty()) {
+            return "Todavia no estas inscrito en ningun torneo."
+        }
+
+        return torneos.joinToString("\n\n") { torneo ->
+            "${torneo.nombre}\n${torneo.fecha} - ${torneo.lugar}\n${torneo.rolTorneo} - ${torneo.estado}"
         }
     }
 }

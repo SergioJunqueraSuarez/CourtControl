@@ -2,9 +2,13 @@ package com.example.courtcontrol
 
 import android.app.AlertDialog
 import android.os.Bundle
+import android.view.inputmethod.EditorInfo
 import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,6 +26,7 @@ class JugadoresTorneo : AppCompatActivity() {
     private lateinit var tvEstado: TextView
     private lateinit var tvOrdenDraft: TextView
     private lateinit var tvTurnoDraft: TextView
+    private lateinit var tvBracketVisual: TextView
     private lateinit var equiposAdapter: EquiposAdapter
     private lateinit var draftAdapter: DraftJugadoresAdapter
     private lateinit var partidosAdapter: PartidosAdapter
@@ -46,6 +51,7 @@ class JugadoresTorneo : AppCompatActivity() {
         tvEstado = findViewById(R.id.tvEstadoTorneo)
         tvOrdenDraft = findViewById(R.id.tvOrdenDraft)
         tvTurnoDraft = findViewById(R.id.tvTurnoDraft)
+        tvBracketVisual = findViewById(R.id.tvBracketVisual)
 
         idTorneo = intent.getIntExtra("id_torneo", -1)
         usuarioId = intent.getIntExtra("usuario_id", -1)
@@ -196,7 +202,11 @@ class JugadoresTorneo : AppCompatActivity() {
 
         findViewById<TextView>(R.id.tvTituloPartidos).isVisible = partidos.isNotEmpty()
         findViewById<TextView>(R.id.tvSubtituloPartidos).isVisible = partidos.isNotEmpty()
+        tvBracketVisual.isVisible = partidos.isNotEmpty()
+        tvBracketVisual.text = construirBracketVisual(partidos)
         recyclerPartidos.isVisible = partidos.isNotEmpty()
+
+        actualizarProgreso(torneo.estado, draftIniciado, draftCompletado, equipos.isNotEmpty(), partidos)
     }
 
     private fun gestionarInscripcion() {
@@ -250,11 +260,32 @@ class JugadoresTorneo : AppCompatActivity() {
 
         val opciones = arrayOf(partido.equipo1, partido.equipo2)
         val ids = arrayOf(partido.equipo1Id, partido.equipo2Id)
+        val inputResultado = EditText(this).apply {
+            hint = "Marcador o resultado, ej. 21-18"
+            setSingleLine(true)
+            imeOptions = EditorInfo.IME_ACTION_DONE
+            setText(partido.resultado.orEmpty())
+            setPadding(32, 16, 32, 16)
+        }
+        val contenedor = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(32, 8, 32, 0)
+            addView(inputResultado)
+        }
 
         AlertDialog.Builder(this)
-            .setTitle("Selecciona ganador")
+            .setTitle(if (partido.ganador == null) "Registrar resultado" else "Corregir resultado")
+            .setView(contenedor)
             .setItems(opciones) { _, which ->
-                val ok = db.registrarGanadorPartido(partido.id, ids[which])
+                val resultado = inputResultado.text.toString().trim().ifBlank {
+                    "${opciones[which]} gana"
+                }
+                val ok = db.registrarResultadoPartido(
+                    idPartido = partido.id,
+                    idGanador = ids[which],
+                    resultado = resultado,
+                    permitirActualizar = true
+                )
                 if (ok) {
                     Toast.makeText(this, "Resultado guardado", Toast.LENGTH_SHORT).show()
                     cargarPantalla()
@@ -264,5 +295,53 @@ class JugadoresTorneo : AppCompatActivity() {
             }
             .setNegativeButton("Cancelar", null)
             .show()
+    }
+
+    private fun actualizarProgreso(
+        estado: String,
+        draftIniciado: Boolean,
+        draftCompletado: Boolean,
+        equiposCreados: Boolean,
+        partidos: List<PartidoTorneo>
+    ) {
+        val finalCreada = partidos.any { it.ronda == 2 }
+        val pasos = listOf(
+            findViewById<TextView>(R.id.tvPasoInscripcion) to true,
+            findViewById<TextView>(R.id.tvPasoDraft) to draftIniciado,
+            findViewById<TextView>(R.id.tvPasoEquipos) to (equiposCreados || draftCompletado),
+            findViewById<TextView>(R.id.tvPasoPartidos) to partidos.isNotEmpty(),
+            findViewById<TextView>(R.id.tvPasoFinal) to (finalCreada || estado == DBHelper.ESTADO_FINALIZADO)
+        )
+
+        pasos.forEach { (view, activo) ->
+            view.setBackgroundColor(
+                ContextCompat.getColor(
+                    this,
+                    if (activo) R.color.cc_primary else R.color.cc_surface_alt
+                )
+            )
+            view.setTextColor(
+                ContextCompat.getColor(
+                    this,
+                    if (activo) R.color.white else R.color.cc_text_secondary
+                )
+            )
+        }
+    }
+
+    private fun construirBracketVisual(partidos: List<PartidoTorneo>): String {
+        val semifinales = partidos.filter { it.ronda == 1 }.sortedBy { it.orden }
+        val final = partidos.firstOrNull { it.ronda == 2 }
+
+        val semiTexto = semifinales.joinToString("\n\n") { partido ->
+            val ganador = partido.ganador ?: "pendiente"
+            "SF${partido.orden}: ${partido.equipo1} vs ${partido.equipo2}\nResultado: ${partido.resultado ?: "-"}\nAvanza: $ganador"
+        }
+
+        val finalTexto = final?.let {
+            "\n\nFINAL: ${it.equipo1} vs ${it.equipo2}\nResultado: ${it.resultado ?: "-"}\nCampeon: ${it.ganador ?: "pendiente"}"
+        } ?: "\n\nFINAL: pendiente de semifinales"
+
+        return semiTexto + finalTexto
     }
 }

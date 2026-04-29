@@ -1,7 +1,10 @@
 package com.example.courtcontrol
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
+import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -13,7 +16,9 @@ class GestionUsuariosActivity : AppCompatActivity() {
     private lateinit var db: DBHelper
     private lateinit var adapter: AdminUsuariosAdapter
     private lateinit var tvEmpty: TextView
+    private lateinit var inputBuscar: EditText
     private var usuarioId: Int = -1
+    private var todosLosUsuarios: List<Usuario> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +37,7 @@ class GestionUsuariosActivity : AppCompatActivity() {
 
         val recycler = findViewById<RecyclerView>(R.id.rvUsuariosAdmin)
         tvEmpty = findViewById(R.id.tvSinUsuariosAdmin)
+        inputBuscar = findViewById(R.id.inputBuscarUsuarioAdmin)
 
         recycler.layoutManager = LinearLayoutManager(this)
         adapter = AdminUsuariosAdapter(emptyList()) { usuario ->
@@ -44,6 +50,13 @@ class GestionUsuariosActivity : AppCompatActivity() {
             }
         }
         recycler.adapter = adapter
+        inputBuscar.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                aplicarBusqueda()
+            }
+            override fun afterTextChanged(s: Editable?) = Unit
+        })
 
         cargarUsuarios()
     }
@@ -56,7 +69,17 @@ class GestionUsuariosActivity : AppCompatActivity() {
     }
 
     private fun cargarUsuarios() {
-        val usuarios = db.obtenerUsuariosNoAdmin()
+        todosLosUsuarios = db.obtenerUsuariosNoAdmin()
+        aplicarBusqueda()
+    }
+
+    private fun aplicarBusqueda() {
+        val busqueda = inputBuscar.text.toString().trim().lowercase()
+        val usuarios = if (busqueda.isEmpty()) {
+            todosLosUsuarios
+        } else {
+            todosLosUsuarios.filter { it.usuario.lowercase().contains(busqueda) }
+        }
         adapter.actualizarLista(usuarios)
         tvEmpty.visibility = if (usuarios.isEmpty()) View.VISIBLE else View.GONE
     }

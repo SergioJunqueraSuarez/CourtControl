@@ -10,6 +10,7 @@
 
     <color name="cc_bg">#F4F7FB</color>
     <color name="cc_surface">#FFFFFF</color>
+    <color name="cc_surface_alt">#EEF4F9</color>
     <color name="cc_primary">#1F4E79</color>
     <color name="cc_primary_dark">#173A5B</color>
     <color name="cc_text_primary">#142235</color>

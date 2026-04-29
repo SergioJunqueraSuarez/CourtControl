@@ -73,10 +73,22 @@
         </LinearLayout>
 
         <TextView
-            android:id="@+id/tvGanadorPartido"
+            android:id="@+id/tvResultadoPartido"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="14dp"
+            android:background="#EEF4F9"
+            android:padding="12dp"
+            android:text="Marcador pendiente"
+            android:textColor="#1F4E79"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvGanadorPartido"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:background="#F3F4F6"
             android:padding="12dp"
             android:text="Pendiente"

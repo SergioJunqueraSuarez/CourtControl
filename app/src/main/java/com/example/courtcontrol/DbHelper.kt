@@ -886,7 +886,7 @@ class DBHelper(context: Context) :
         val db = readableDatabase
         val cursor = db.rawQuery(
             """
-            SELECT P.id_partido, P.ronda, P.orden, E1.nombre, E2.nombre, P.ganador, P.equipo1, P.equipo2
+            SELECT P.id_partido, P.ronda, P.orden, E1.nombre, E2.nombre, P.resultado, P.ganador, P.equipo1, P.equipo2
             FROM Partidos P
             INNER JOIN Equipos E1 ON E1.id_equipo = P.equipo1
             INNER JOIN Equipos E2 ON E2.id_equipo = P.equipo2
@@ -897,7 +897,7 @@ class DBHelper(context: Context) :
         )
         if (cursor.moveToFirst()) {
             do {
-                val ganadorId = if (cursor.isNull(5)) null else cursor.getInt(5)
+                val ganadorId = if (cursor.isNull(6)) null else cursor.getInt(6)
                 partidos.add(
                     PartidoTorneo(
                         id = cursor.getInt(0),
@@ -905,13 +905,14 @@ class DBHelper(context: Context) :
                         orden = cursor.getInt(2),
                         equipo1 = cursor.getString(3),
                         equipo2 = cursor.getString(4),
+                        resultado = if (cursor.isNull(5)) null else cursor.getString(5),
                         ganador = when (ganadorId) {
-                            cursor.getInt(6) -> cursor.getString(3)
-                            cursor.getInt(7) -> cursor.getString(4)
+                            cursor.getInt(7) -> cursor.getString(3)
+                            cursor.getInt(8) -> cursor.getString(4)
                             else -> null
                         },
-                        equipo1Id = cursor.getInt(6),
-                        equipo2Id = cursor.getInt(7)
+                        equipo1Id = cursor.getInt(7),
+                        equipo2Id = cursor.getInt(8)
                     )
                 )
             } while (cursor.moveToNext())
@@ -947,11 +948,15 @@ class DBHelper(context: Context) :
     }
 
     fun registrarGanadorPartido(idPartido: Int, idGanador: Int): Boolean {
+        return registrarResultadoPartido(idPartido, idGanador, obtenerNombreEquipoPorId(idGanador), false)
+    }
+
+    fun registrarResultadoPartido(idPartido: Int, idGanador: Int, resultado: String, permitirActualizar: Boolean): Boolean {
         val db = writableDatabase
         db.beginTransaction()
         return try {
             val infoCursor = db.rawQuery(
-                "SELECT id_torneo, ronda, equipo1, equipo2, ganador FROM Partidos WHERE id_partido = ?",
+                "SELECT id_torneo, ronda, orden, equipo1, equipo2, ganador FROM Partidos WHERE id_partido = ?",
                 arrayOf(idPartido.toString())
             )
             if (!infoCursor.moveToFirst()) {
@@ -960,12 +965,13 @@ class DBHelper(context: Context) :
             }
             val idTorneo = infoCursor.getInt(0)
             val ronda = infoCursor.getInt(1)
-            val equipo1 = infoCursor.getInt(2)
-            val equipo2 = infoCursor.getInt(3)
-            val yaTieneGanador = !infoCursor.isNull(4)
+            val orden = infoCursor.getInt(2)
+            val equipo1 = infoCursor.getInt(3)
+            val equipo2 = infoCursor.getInt(4)
+            val ganadorAnterior = if (infoCursor.isNull(5)) null else infoCursor.getInt(5)
             infoCursor.close()
 
-            if (yaTieneGanador) {
+            if (ganadorAnterior != null && !permitirActualizar) {
                 return false
             }
 
@@ -975,7 +981,7 @@ class DBHelper(context: Context) :
 
             val updateValues = ContentValues().apply {
                 put("ganador", idGanador)
-                put("resultado", obtenerNombreEquipo(db, idGanador))
+                put("resultado", resultado.ifBlank { obtenerNombreEquipo(db, idGanador) })
             }
             val filasActualizadas = db.update(
                 "Partidos",
@@ -989,14 +995,14 @@ class DBHelper(context: Context) :
 
             if (ronda == 1) {
                 val semiCursor = db.rawQuery(
-                    "SELECT ganador FROM Partidos WHERE id_torneo = ? AND ronda = 1 ORDER BY orden ASC",
+                    "SELECT orden, ganador FROM Partidos WHERE id_torneo = ? AND ronda = 1 ORDER BY orden ASC",
                     arrayOf(idTorneo.toString())
                 )
-                val ganadores = mutableListOf<Int>()
+                val ganadores = mutableMapOf<Int, Int>()
                 if (semiCursor.moveToFirst()) {
                     do {
-                        if (!semiCursor.isNull(0)) {
-                            ganadores.add(semiCursor.getInt(0))
+                        if (!semiCursor.isNull(1)) {
+                            ganadores[semiCursor.getInt(0)] = semiCursor.getInt(1)
                         }
                     } while (semiCursor.moveToNext())
                 }
@@ -1004,16 +1010,35 @@ class DBHelper(context: Context) :
 
                 if (ganadores.size == 2) {
                     val finalCursor = db.rawQuery(
-                        "SELECT COUNT(*) FROM Partidos WHERE id_torneo = ? AND ronda = 2",
+                        "SELECT id_partido, equipo1, equipo2, ganador FROM Partidos WHERE id_torneo = ? AND ronda = 2",
                         arrayOf(idTorneo.toString())
                     )
-                    finalCursor.moveToFirst()
-                    val existeFinal = finalCursor.getInt(0) > 0
+                    val existeFinal = finalCursor.moveToFirst()
+                    val finalId = if (existeFinal) finalCursor.getInt(0) else null
+                    val finalGanador = if (existeFinal && !finalCursor.isNull(3)) finalCursor.getInt(3) else null
                     finalCursor.close()
 
-                    if (!existeFinal) {
-                        insertarPartido(db, idTorneo, ganadores[0], ganadores[1], 2, 1)
+                    val finalEquipo1 = ganadores[1] ?: return false
+                    val finalEquipo2 = ganadores[2] ?: return false
+
+                    if (finalId == null) {
+                        insertarPartido(db, idTorneo, finalEquipo1, finalEquipo2, 2, 1)
+                    } else {
+                        val finalValues = ContentValues().apply {
+                            put("equipo1", finalEquipo1)
+                            put("equipo2", finalEquipo2)
+                            if (finalGanador != finalEquipo1 && finalGanador != finalEquipo2) {
+                                putNull("ganador")
+                                putNull("resultado")
+                            }
+                        }
+                        db.update("Partidos", finalValues, "id_partido = ?", arrayOf(finalId.toString()))
                     }
+                }
+
+                if (ganadorAnterior != null && ganadorAnterior != idGanador) {
+                    val torneoValues = ContentValues().apply { put("estado", ESTADO_EN_JUEGO) }
+                    db.update("Torneos", torneoValues, "id = ?", arrayOf(idTorneo.toString()))
                 }
             } else if (ronda == 2) {
                 val torneoValues = ContentValues().apply { put("estado", ESTADO_FINALIZADO) }
@@ -1026,6 +1051,37 @@ class DBHelper(context: Context) :
             db.endTransaction()
             db.close()
         }
+    }
+
+    fun obtenerTorneosPerfil(idUsuario: Int): List<PerfilTorneo> {
+        val torneos = mutableListOf<PerfilTorneo>()
+        val db = readableDatabase
+        val cursor = db.rawQuery(
+            """
+            SELECT T.nombre, T.fecha, T.lugar, T.estado, I.rol_torneo
+            FROM Inscripciones I
+            INNER JOIN Torneos T ON T.id = I.id_torneo
+            WHERE I.id_usuario = ?
+            ORDER BY T.fecha ASC, T.nombre ASC
+            """.trimIndent(),
+            arrayOf(idUsuario.toString())
+        )
+        if (cursor.moveToFirst()) {
+            do {
+                torneos.add(
+                    PerfilTorneo(
+                        nombre = cursor.getString(0),
+                        fecha = cursor.getString(1),
+                        lugar = cursor.getString(2),
+                        estado = cursor.getString(3),
+                        rolTorneo = cursor.getString(4)
+                    )
+                )
+            } while (cursor.moveToNext())
+        }
+        cursor.close()
+        db.close()
+        return torneos
     }
 
     private fun insertarPartido(db: SQLiteDatabase, idTorneo: Int, equipo1: Int, equipo2: Int, ronda: Int, orden: Int) {
@@ -1063,6 +1119,13 @@ class DBHelper(context: Context) :
         )
         val nombre = if (cursor.moveToFirst()) cursor.getString(0) else ""
         cursor.close()
+        return nombre
+    }
+
+    private fun obtenerNombreEquipoPorId(idEquipo: Int): String {
+        val db = readableDatabase
+        val nombre = obtenerNombreEquipo(db, idEquipo)
+        db.close()
         return nombre
     }
 

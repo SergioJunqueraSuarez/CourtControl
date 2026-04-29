@@ -20,6 +20,7 @@ class PartidosAdapter(
         val tvEquipo1 = itemView.findViewById<TextView>(R.id.tvEquipo1Partido)
         val tvEquipo2 = itemView.findViewById<TextView>(R.id.tvEquipo2Partido)
         val tvVersus = itemView.findViewById<TextView>(R.id.tvVersusPartido)
+        val tvResultado = itemView.findViewById<TextView>(R.id.tvResultadoPartido)
         val tvGanador = itemView.findViewById<TextView>(R.id.tvGanadorPartido)
         val btnResultado = itemView.findViewById<Button>(R.id.btnResultadoPartido)
     }
@@ -38,6 +39,7 @@ class PartidosAdapter(
         holder.tvEquipo1.text = partido.equipo1
         holder.tvEquipo2.text = partido.equipo2
         holder.tvVersus.text = if (esFinal) "FINAL" else "VS"
+        holder.tvResultado.text = partido.resultado?.let { "Marcador: $it" } ?: "Marcador pendiente"
         holder.tvGanador.text = partido.ganador?.let { "Ganador: $it" } ?: "Resultado pendiente"
 
         if (esFinal) {
@@ -81,13 +83,11 @@ class PartidosAdapter(
         )
 
         holder.btnResultado.visibility = if (esAdmin) View.VISIBLE else View.GONE
-        holder.btnResultado.text = if (partido.ganador == null) "Registrar ganador" else "Resultado cerrado"
-        holder.btnResultado.isEnabled = partido.ganador == null
-        holder.btnResultado.alpha = if (partido.ganador == null) 1f else 0.65f
+        holder.btnResultado.text = if (partido.ganador == null) "Registrar resultado" else "Corregir resultado"
+        holder.btnResultado.isEnabled = true
+        holder.btnResultado.alpha = 1f
         holder.btnResultado.setOnClickListener {
-            if (partido.ganador == null) {
-                onSeleccionarGanador(partido)
-            }
+            onSeleccionarGanador(partido)
         }
     }
 

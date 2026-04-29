@@ -60,6 +60,19 @@
                 android:textSize="16sp"
                 android:textStyle="bold" />
 
+            <EditText
+                android:id="@+id/inputBuscarTorneo"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="10dp"
+                android:backgroundTint="@color/cc_primary"
+                android:hint="Buscar torneo o lugar"
+                android:inputType="text"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:textColor="@color/cc_text_primary"
+                android:textColorHint="@color/cc_text_secondary" />
+
             <Spinner
                 android:id="@+id/spinnerEstado"
                 android:layout_width="match_parent"

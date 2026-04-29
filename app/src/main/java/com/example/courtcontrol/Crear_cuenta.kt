@@ -30,8 +30,18 @@ class Crear_cuenta : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            if (!FormValidator.usuarioValido(usuario)) {
+                etUsuario.error = FormValidator.mensajeUsuario()
+                return@setOnClickListener
+            }
+
+            if (!FormValidator.passwordValida(password)) {
+                etPassword.error = FormValidator.mensajePassword()
+                return@setOnClickListener
+            }
+
             if (password != repetir) {
-                Toast.makeText(this, "Las contrasenas no coinciden", Toast.LENGTH_SHORT).show()
+                etRepetir.error = "Las contrasenas no coinciden"
                 return@setOnClickListener
             }
 

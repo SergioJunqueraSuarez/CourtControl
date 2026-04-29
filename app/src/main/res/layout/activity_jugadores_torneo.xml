@@ -46,6 +46,101 @@
                     android:textColor="@color/cc_text_secondary"
                     android:textSize="14sp" />
 
+                <HorizontalScrollView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:fillViewport="false"
+                    android:overScrollMode="never"
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/layoutProgresoTorneo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/tvPasoInscripcion"
+                            android:layout_width="96dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:minHeight="36dp"
+                            android:paddingStart="8dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="Inscripcion"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvPasoDraft"
+                            android:layout_width="96dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:minHeight="36dp"
+                            android:paddingStart="8dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="Draft"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvPasoEquipos"
+                            android:layout_width="96dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:minHeight="36dp"
+                            android:paddingStart="8dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="Equipos"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvPasoPartidos"
+                            android:layout_width="96dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="6dp"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:minHeight="36dp"
+                            android:paddingStart="8dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="Partidos"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:id="@+id/tvPasoFinal"
+                            android:layout_width="96dp"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:maxLines="1"
+                            android:minHeight="36dp"
+                            android:paddingStart="8dp"
+                            android:paddingTop="8dp"
+                            android:paddingEnd="8dp"
+                            android:paddingBottom="8dp"
+                            android:text="Final"
+                            android:textSize="11sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </HorizontalScrollView>
+
                 <Button
                     android:id="@+id/btnIniciarDraft"
                     android:layout_width="match_parent"
@@ -137,6 +232,18 @@
             android:text="Las semifinales aparecen primero y la final destaca al final del cuadro."
             android:textColor="@color/cc_text_secondary"
             android:textSize="14sp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvBracketVisual"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@color/cc_surface_alt"
+            android:fontFamily="monospace"
+            android:padding="12dp"
+            android:textColor="@color/cc_text_primary"
+            android:textSize="13sp"
             android:visibility="gone" />
 
         <androidx.recyclerview.widget.RecyclerView

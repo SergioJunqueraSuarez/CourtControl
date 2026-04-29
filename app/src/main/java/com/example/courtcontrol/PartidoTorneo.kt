@@ -6,6 +6,7 @@ data class PartidoTorneo(
     val orden: Int,
     val equipo1: String,
     val equipo2: String,
+    val resultado: String?,
     val ganador: String?,
     val equipo1Id: Int,
     val equipo2Id: Int

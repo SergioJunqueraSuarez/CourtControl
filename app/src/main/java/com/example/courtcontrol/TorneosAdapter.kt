@@ -44,7 +44,7 @@ class TorneosAdapter(
         val capitanesRestantes = db.capitanesRestantes(torneo.id)
 
         holder.tvJugadores.text = "$numJugadores/${DBHelper.MAX_JUGADORES_POR_TORNEO} jugadores"
-        holder.tvCapitanes.text = "Capitanes: $numCapitanes/${DBHelper.MAX_EQUIPOS_POR_TORNEO} - faltan $capitanesRestantes"
+        holder.tvCapitanes.text = "Capitanes $numCapitanes/${DBHelper.MAX_EQUIPOS_POR_TORNEO}"
 
         if (numJugadores >= DBHelper.MAX_JUGADORES_POR_TORNEO) {
             holder.tvJugadores.setTextColor(ContextCompat.getColor(context, R.color.cc_danger))

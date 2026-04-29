@@ -34,6 +34,11 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            if (!FormValidator.usuarioValido(usuarioTxt)) {
+                etUsuario.error = FormValidator.mensajeUsuario()
+                return@setOnClickListener
+            }
+
             runCatching {
                 val valido = db.validarLogin(usuarioTxt, password)
 
